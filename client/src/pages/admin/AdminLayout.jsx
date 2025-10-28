@@ -10,6 +10,7 @@ export default function AdminLayout() {
         <Link to="/admin/monitor">Monitoring</Link>
         <Link to="/admin/results">Results</Link>
         <Link to="/admin/announcements">Announcements</Link>
+        <Link to="/admin/grade">Grade</Link>
       </nav>
       <Outlet />
     </main>

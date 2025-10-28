@@ -62,6 +62,7 @@ export default function AdminResults() {
         {attempts.map((t) => (
           <li key={t._id}>
             {t.student?.email || t.student?.name || t.student} — score: {t.score ?? ''} — {t.status}
+            <a style={{ marginLeft: 8 }} href={`/admin/grade?attemptId=${t._id}`}>Grade</a>
           </li>
         ))}
       </ul>

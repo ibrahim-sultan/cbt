@@ -5,7 +5,8 @@ const AnswerSchema = new mongoose.Schema(
     question: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
     selectedOptionIndexes: [Number],
     textAnswer: String,
-    isCorrect: Boolean
+    isCorrect: Boolean,
+    comment: String
   },
   { _id: false }
 );

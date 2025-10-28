@@ -194,4 +194,36 @@ router.get('/attempts/:attemptId/review', auth, async (req, res) => {
   res.json({ attemptId: attempt._id, details });
 });
 
+// Manual grading for subjective answers
+router.patch('/attempts/:attemptId/grade', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const { attemptId } = req.params;
+  const { grades = [] } = req.body; // [{question, isCorrect, comment}]
+  const attempt = await Attempt.findById(attemptId);
+  if (!attempt) return res.status(404).json({ message: 'Not found' });
+  const exam = await Exam.findById(attempt.exam);
+  if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+  const map = new Map(grades.map((g) => [String(g.question), g]));
+  attempt.answers = (attempt.answers || []).map((a) => {
+    const g = map.get(String(a.question));
+    if (g && typeof g.isCorrect !== 'undefined') {
+      return { ...a.toObject?.() ?? a, isCorrect: g.isCorrect, comment: g.comment };
+    }
+    return a;
+  });
+
+  // recompute total score from per-answer correctness
+  const markCorrect = exam?.marking?.correct ?? 1;
+  const markWrong = exam?.marking?.wrong ?? 0;
+  let score = 0;
+  for (const a of attempt.answers) {
+    if (a.isCorrect === true) score += markCorrect;
+    else if (a.isCorrect === false) score += markWrong;
+  }
+  attempt.score = score;
+  attempt.status = 'graded';
+  await attempt.save();
+  res.json({ ok: true, attemptId: attempt._id, score });
+});
+
 export default router;
