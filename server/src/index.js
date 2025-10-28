@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import examRoutes from './routes/exams.js';
 import questionRoutes from './routes/questions.js';
 import monitorRoutes from './routes/monitor.js';
+import announcementRoutes from './routes/announcements.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/monitor', monitorRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 const PORT = process.env.PORT || 4000;
 

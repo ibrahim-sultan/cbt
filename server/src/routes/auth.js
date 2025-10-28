@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User.js';
+import PasswordResetToken from '../models/PasswordResetToken.js';
 import { auth } from '../middleware/auth.js';
 
 const router = Router();
@@ -34,6 +36,31 @@ router.post('/login', async (req, res) => {
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
   }
+});
+
+// Request password reset (dev: returns token in response; prod: email it)
+router.post('/reset-request', async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.json({ ok: true }); // don't reveal
+  const token = crypto.randomBytes(24).toString('hex');
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30m
+  await PasswordResetToken.create({ user: user._id, token, expiresAt });
+  return res.json({ ok: true, token });
+});
+
+// Confirm password reset
+router.post('/reset-confirm', async (req, res) => {
+  const { token, password } = req.body;
+  const rec = await PasswordResetToken.findOne({ token, used: false, expiresAt: { $gt: new Date() } });
+  if (!rec) return res.status(400).json({ message: 'Invalid or expired token' });
+  const user = await User.findById(rec.user);
+  if (!user) return res.status(400).json({ message: 'Invalid token' });
+  await user.setPassword(password);
+  await user.save();
+  rec.used = true;
+  await rec.save();
+  res.json({ ok: true });
 });
 
 router.get('/me', auth, async (req, res) => {

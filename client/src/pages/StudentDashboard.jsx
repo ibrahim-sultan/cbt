@@ -6,12 +6,18 @@ export default function StudentDashboard() {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
 
+  const [announcements, setAnnouncements] = useState([]);
+
   useEffect(() => {
     (async () => {
       setStatus('loading');
       try {
-        const data = await api('/exams/assigned');
-        setExams(data);
+        const [exData, annData] = await Promise.all([
+          api('/exams/assigned'),
+          api('/announcements')
+        ]);
+        setExams(exData);
+        setAnnouncements(annData);
         setStatus('done');
       } catch (e) {
         setError('Failed to load exams');
@@ -34,6 +40,16 @@ export default function StudentDashboard() {
       <h1>My Exams</h1>
       {status === 'loading' && <p>Loading...</p>}
       {error && <p style={{ color: 'tomato' }}>{error}</p>}
+      {!!announcements.length && (
+        <section style={{ padding: 12, border: '1px solid #333', marginBottom: 12 }}>
+          <h3>Announcements</h3>
+          <ul>
+            {announcements.map((a) => (
+              <li key={a._id}><b>{a.title}:</b> {a.body}</li>
+            ))}
+          </ul>
+        </section>
+      )}
       <ul>
         {exams.map((ex) => (
           <li key={ex._id} style={{ marginBottom: 8 }}>
