@@ -24,5 +24,11 @@ export default [
     languageOptions: {
       globals: { test: 'readonly', expect: 'readonly', describe: 'readonly', document: 'readonly' }
     }
+  },
+  {
+    files: ['src/**/*.jsx'],
+    languageOptions: {
+      globals: { FormData: 'readonly' }
+    }
   }
 ];

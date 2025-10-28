@@ -17,6 +17,20 @@ router.post('/', auth, requireRole('admin', 'instructor'), async (req, res) => {
   }
 });
 
+// Update
+router.put('/:id', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const q = await Question.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!q) return res.status(404).json({ message: 'Not found' });
+  res.json(q);
+});
+
+// Delete
+router.delete('/:id', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const q = await Question.findByIdAndDelete(req.params.id);
+  if (!q) return res.status(404).json({ message: 'Not found' });
+  res.json({ ok: true });
+});
+
 // Bulk upload via Excel/CSV
 router.post('/bulk', auth, requireRole('admin', 'instructor'), upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'file required' });

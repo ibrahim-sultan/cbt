@@ -14,7 +14,8 @@ export default function Login() {
     try {
       const res = await api('/auth/login', { method: 'POST', body: { email, password } });
       localStorage.setItem('token', res.token);
-      navigate('/');
+      localStorage.setItem('role', res.user?.role || 'student');
+      navigate(res.user?.role === 'admin' || res.user?.role === 'instructor' ? '/admin' : '/');
     } catch (e) {
       setError('Login failed');
     }

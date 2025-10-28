@@ -31,6 +31,27 @@ router.get('/assigned', auth, async (req, res) => {
   res.json(exams);
 });
 
+// Admin get exam by id
+router.get('/:id', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const item = await Exam.findById(req.params.id);
+  if (!item) return res.status(404).json({ message: 'Not found' });
+  res.json(item);
+});
+
+// Admin update exam
+router.put('/:id', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const item = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!item) return res.status(404).json({ message: 'Not found' });
+  res.json(item);
+});
+
+// Admin delete exam
+router.delete('/:id', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const item = await Exam.findByIdAndDelete(req.params.id);
+  if (!item) return res.status(404).json({ message: 'Not found' });
+  res.json({ ok: true });
+});
+
 // Start exam (creates attempt if none) and return question ids order
 router.post('/:id/start', auth, async (req, res) => {
   const examId = req.params.id;
