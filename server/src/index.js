@@ -41,14 +41,16 @@ if (process.env.CLIENT_DIST_DIR) {
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  connectDB()
-    .then(() => {
+  const start = async () => {
+    try {
+      await connectDB();
       app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error('DB connection failed:', err.message);
       process.exit(1);
-    });
+    }
+  };
+  start();
 }
 
 export default app;
