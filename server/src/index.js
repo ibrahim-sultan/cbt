@@ -12,7 +12,6 @@ import announcementRoutes from './routes/announcements.js';
 import groupRoutes from './routes/groups.js';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -34,11 +33,9 @@ app.use('/api/groups', groupRoutes);
 
 const PORT = process.env.PORT || 4000;
 
-// Serve client build in production
-if (process.env.NODE_ENV === 'production') {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const clientDist = path.resolve(__dirname, '../../client/dist');
+// Serve client build only when CLIENT_DIST_DIR is provided (e.g., on Render)
+if (process.env.CLIENT_DIST_DIR) {
+  const clientDist = path.resolve(process.cwd(), process.env.CLIENT_DIST_DIR);
   app.use(express.static(clientDist));
   app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 }

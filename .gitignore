@@ -10,3 +10,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
+# Desktop packaging artifacts
+dist-electron/
+resources/
+electron/
