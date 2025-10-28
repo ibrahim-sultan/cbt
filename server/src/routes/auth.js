@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import PasswordResetToken from '../models/PasswordResetToken.js';
+import RefreshToken from '../models/RefreshToken.js';
 import { auth } from '../middleware/auth.js';
 
 const router = Router();
@@ -31,8 +32,20 @@ router.post('/login', async (req, res) => {
     if (!user || !user.isActive) return res.status(401).json({ message: 'Invalid credentials' });
     const ok = email ? await user.validatePassword(password) : true; // allow examId-only if configured later
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
-    const token = jwt.sign({ id: user.id, role: user.role, name: user.name }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ token, user: { id: user.id, role: user.role, name: user.name, email: user.email } });
+
+    const accessTtl = process.env.ACCESS_TOKEN_TTL || '15m';
+    const refreshTtlMs = (parseInt(process.env.REFRESH_TOKEN_DAYS || '30', 10)) * 24 * 60 * 60 * 1000;
+
+    const access = jwt.sign({ id: user.id, role: user.role, name: user.name }, process.env.JWT_SECRET, { expiresIn: accessTtl });
+
+    const rt = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + refreshTtlMs);
+    await RefreshToken.create({ user: user._id, token: rt, expiresAt });
+
+    const secure = process.env.NODE_ENV === 'production';
+    res.cookie('rt', rt, { httpOnly: true, sameSite: 'lax', secure, expires: expiresAt, path: '/' });
+
+    return res.json({ token: access, user: { id: user.id, role: user.role, name: user.name, email: user.email } });
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
   }
@@ -66,6 +79,34 @@ router.post('/reset-confirm', async (req, res) => {
 router.get('/me', auth, async (req, res) => {
   const user = await User.findById(req.user.id).select('-passwordHash');
   res.json({ user });
+});
+
+// Refresh access token
+router.post('/refresh', async (req, res) => {
+  try {
+    const rt = req.cookies?.rt;
+    if (!rt) return res.status(401).json({ message: 'No refresh token' });
+    const rec = await RefreshToken.findOne({ token: rt, revoked: false, expiresAt: { $gt: new Date() } });
+    if (!rec) return res.status(401).json({ message: 'Invalid refresh token' });
+    const user = await User.findById(rec.user);
+    if (!user) return res.status(401).json({ message: 'Invalid refresh token' });
+
+    const accessTtl = process.env.ACCESS_TOKEN_TTL || '15m';
+    const access = jwt.sign({ id: user.id, role: user.role, name: user.name }, process.env.JWT_SECRET, { expiresIn: accessTtl });
+    return res.json({ token: access });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Logout
+router.post('/logout', async (req, res) => {
+  const rt = req.cookies?.rt;
+  if (rt) {
+    await RefreshToken.updateOne({ token: rt }, { $set: { revoked: true } });
+    res.clearCookie('rt');
+  }
+  res.json({ ok: true });
 });
 
 export default router;

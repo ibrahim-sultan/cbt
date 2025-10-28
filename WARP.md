@@ -9,6 +9,8 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 - Server only: `npm --prefix server run dev`
 - Lint: `npm run lint`
 - Build client: `npm --prefix client run build`
+- Build (root): `npm run build`
+- Start (prod): `npm run start`
 - Run tests:
   - All: `npm run test`
   - Client only: `npm run test:client`
