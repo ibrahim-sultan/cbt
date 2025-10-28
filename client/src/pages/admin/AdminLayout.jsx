@@ -7,6 +7,8 @@ export default function AdminLayout() {
       <nav style={{ display: 'flex', gap: 12 }}>
         <Link to="/admin/questions">Questions</Link>
         <Link to="/admin/exams">Exams</Link>
+        <Link to="/admin/monitor">Monitoring</Link>
+        <Link to="/admin/results">Results</Link>
       </nav>
       <Outlet />
     </main>

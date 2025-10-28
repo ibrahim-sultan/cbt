@@ -2,9 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login.jsx';
 import StudentDashboard from './pages/StudentDashboard.jsx';
 import StudentExam from './pages/StudentExam.jsx';
+import StudentResults from './pages/StudentResults.jsx';
 import AdminLayout from './pages/admin/AdminLayout.jsx';
 import AdminQuestions from './pages/admin/AdminQuestions.jsx';
 import AdminExams from './pages/admin/AdminExams.jsx';
+import AdminMonitoring from './pages/admin/AdminMonitoring.jsx';
+import AdminResults from './pages/admin/AdminResults.jsx';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -30,6 +33,14 @@ export default function App() {
           }
         />
         <Route
+          path="/results"
+          element={
+            <RequireAuth>
+              <StudentResults />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="/exam/:id"
           element={
             <RequireAuth>
@@ -50,6 +61,8 @@ export default function App() {
           <Route index element={<AdminQuestions />} />
           <Route path="questions" element={<AdminQuestions />} />
           <Route path="exams" element={<AdminExams />} />
+          <Route path="monitor" element={<AdminMonitoring />} />
+          <Route path="results" element={<AdminResults />} />
         </Route>
       </Routes>
     </BrowserRouter>

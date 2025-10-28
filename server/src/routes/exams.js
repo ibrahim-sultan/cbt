@@ -134,6 +134,19 @@ router.get('/:id/results', auth, requireRole('admin', 'instructor'), async (req,
   res.json(items);
 });
 
+// Analytics (basic)
+router.get('/:id/analytics', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const examId = req.params.id;
+  const items = await Attempt.find({ exam: examId, status: { $in: ['submitted', 'graded'] } });
+  const scores = items.map((a) => a.score || 0);
+  const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const top = items
+    .map((a) => ({ student: a.student, score: a.score, _id: a._id }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+  res.json({ attempts: items.length, average: avg, top });
+});
+
 router.get('/results/mine', auth, async (req, res) => {
   const items = await Attempt.find({ student: req.user.id }).populate('exam', 'title startAt endAt');
   res.json(items);

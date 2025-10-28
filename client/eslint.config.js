@@ -28,7 +28,7 @@ export default [
   {
     files: ['src/**/*.jsx'],
     languageOptions: {
-      globals: { FormData: 'readonly' }
+      globals: { FormData: 'readonly', URLSearchParams: 'readonly', Blob: 'readonly', URL: 'readonly' }
     }
   }
 ];

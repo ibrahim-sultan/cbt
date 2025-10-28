@@ -21,6 +21,33 @@ router.get('/active', auth, requireRole('admin', 'instructor'), async (req, res)
   res.json(items);
 });
 
+// Logs: list by attempt or exam
+router.get('/logs', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const { attemptId, examId, limit = 200 } = req.query;
+  const filter = {};
+  if (attemptId) filter.attempt = attemptId;
+  if (examId) filter.exam = examId;
+  const items = await ActivityLog.find(filter).sort({ createdAt: -1 }).limit(Number(limit));
+  res.json(items);
+});
+
+// Logs stats per attempt (counts by type)
+router.get('/stats', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const { examId } = req.query;
+  const match = examId ? { exam: examId } : {};
+  const agg = await ActivityLog.aggregate([
+    { $match: match },
+    { $group: { _id: { attempt: '$attempt', type: '$type' }, count: { $sum: 1 } } },
+  ]);
+  const result = {};
+  for (const r of agg) {
+    const aid = String(r._id.attempt);
+    result[aid] = result[aid] || {};
+    result[aid][r._id.type] = r.count;
+  }
+  res.json(result);
+});
+
 // Force submit an attempt
 router.post('/:attemptId/force-submit', auth, requireRole('admin', 'instructor'), async (req, res) => {
   const { attemptId } = req.params;

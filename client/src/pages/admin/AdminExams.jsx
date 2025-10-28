@@ -39,6 +39,7 @@ export default function AdminExams() {
           <li key={ex._id} style={{ margin: '8px 0' }}>
             <b>{ex.title}</b> — {ex.durationMinutes}m — {ex.questionCount} questions
             <button style={{ marginLeft: 8 }} onClick={() => remove(ex._id)}>Delete</button>
+            <a style={{ marginLeft: 8 }} href={`/admin/exams?examId=${ex._id}`}>Results</a>
           </li>
         ))}
       </ul>
