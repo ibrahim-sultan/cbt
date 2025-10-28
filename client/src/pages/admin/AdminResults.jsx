@@ -5,15 +5,18 @@ export default function AdminResults() {
   const [examId, setExamId] = useState('');
   const [attempts, setAttempts] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [qStats, setQStats] = useState([]);
 
   const load = async (id) => {
     if (!id) return;
-    const [a, an] = await Promise.all([
+    const [a, an, qs] = await Promise.all([
       api(`/exams/${id}/results`),
-      api(`/exams/${id}/analytics`)
+      api(`/exams/${id}/analytics`),
+      api(`/exams/${id}/question-stats`)
     ]);
     setAttempts(a);
     setAnalytics(an);
+    setQStats(qs);
   };
 
   useEffect(() => {
@@ -44,6 +47,16 @@ export default function AdminResults() {
       </div>
       {analytics && (
         <p>Attempts: {analytics.attempts} | Average score: {analytics.average?.toFixed(2)}</p>
+      )}
+      {!!qStats.length && (
+        <div style={{ margin: '8px 0' }}>
+          <h3>Question accuracy (lowest first)</h3>
+          <ol>
+            {qStats.map((s) => (
+              <li key={s.question}>Q {String(s.question).slice(-6)} — {Math.round((s.accuracy || 0) * 100)}% correct (n={s.total})</li>
+            ))}
+          </ol>
+        </div>
       )}
       <ul>
         {attempts.map((t) => (

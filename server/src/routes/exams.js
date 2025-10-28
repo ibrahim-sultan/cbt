@@ -5,6 +5,7 @@ import Attempt from '../models/Attempt.js';
 import Question from '../models/Question.js';
 import { sample } from '../utils/random.js';
 import { gradeAttempt } from '../utils/grading.js';
+import mongoose from 'mongoose';
 
 const router = Router();
 
@@ -120,6 +121,8 @@ router.post('/:id/submit', auth, async (req, res) => {
   const questions = await Question.find({ _id: { $in: attempt.questions } });
   const { score, details, hasSubjective } = gradeAttempt({ exam, questions, answers });
 
+  const correctness = new Map(details.map((d) => [String(d.questionId), d.correct]));
+  attempt.answers = (answers || []).map((a) => ({ ...a, isCorrect: correctness.get(String(a.question)) ?? null }));
   attempt.score = score;
   attempt.status = hasSubjective ? 'submitted' : 'graded';
   await attempt.save();
@@ -150,6 +153,45 @@ router.get('/:id/analytics', auth, requireRole('admin', 'instructor'), async (re
 router.get('/results/mine', auth, async (req, res) => {
   const items = await Attempt.find({ student: req.user.id }).populate('exam', 'title startAt endAt');
   res.json(items);
+});
+
+// Per-question stats for an exam
+router.get('/:id/question-stats', auth, requireRole('admin', 'instructor'), async (req, res) => {
+  const examId = req.params.id;
+  const agg = await Attempt.aggregate([
+    { $match: { exam: new mongoose.Types.ObjectId(examId) } },
+    { $unwind: '$answers' },
+    { $group: { _id: '$answers.question', total: { $sum: 1 }, correct: { $sum: { $cond: [{ $eq: ['$answers.isCorrect', true] }, 1, 0] } } } },
+    { $project: { question: '$_id', total: 1, correct: 1, accuracy: { $cond: [{ $gt: ['$total', 0] }, { $divide: ['$correct', '$total'] }, 0] } } },
+    { $sort: { accuracy: 1 } }
+  ]);
+  res.json(agg);
+});
+
+// Attempt review (owner or admin)
+router.get('/attempts/:attemptId/review', auth, async (req, res) => {
+  const id = req.params.attemptId;
+  const attempt = await Attempt.findById(id);
+  if (!attempt) return res.status(404).json({ message: 'Not found' });
+  if (!(req.user.role === 'admin' || req.user.role === 'instructor' || String(attempt.student) === req.user.id)) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  if (attempt.status === 'in_progress') return res.status(400).json({ message: 'Attempt in progress' });
+  const qs = await Question.find({ _id: { $in: attempt.questions } });
+  const qMap = new Map(qs.map((q) => [String(q._id), q]));
+  const details = attempt.answers.map((a) => {
+    const q = qMap.get(String(a.question));
+    return {
+      questionId: a.question,
+      text: q?.text,
+      type: q?.type,
+      options: (q?.options || []).map((o) => ({ text: o.text, isCorrect: o.isCorrect })),
+      explanation: q?.explanation,
+      selectedOptionIndexes: a.selectedOptionIndexes,
+      isCorrect: a.isCorrect
+    };
+  });
+  res.json({ attemptId: attempt._id, details });
 });
 
 export default router;

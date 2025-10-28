@@ -36,10 +36,44 @@ router.post('/bulk', auth, requireRole('admin', 'instructor'), upload.single('fi
   if (!req.file) return res.status(400).json({ message: 'file required' });
   const wb = xlsx.read(req.file.buffer, { type: 'buffer' });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows = xlsx.utils.sheet_to_json(sheet);
-  // Expected columns: text,type,options,answer,subject,topic,tags
-  // TODO: Map rows -> Question documents
-  res.json({ uploaded: rows.length, message: 'Parsing not yet implemented' });
+  const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+  // Expected columns (case-insensitive): text,type,options,answer,subject,topic,tags
+  const docs = [];
+  for (const r of rows) {
+    const pick = (k) => r[k] ?? r[k?.toUpperCase?.()] ?? r[k?.toLowerCase?.()];
+    const text = pick('text')?.toString().trim();
+    if (!text) continue;
+    const type = (pick('type')?.toString().trim().toLowerCase()) || 'mcq';
+    const subject = pick('subject')?.toString().trim() || '';
+    const topic = pick('topic')?.toString().trim() || '';
+    const tags = (pick('tags')?.toString().split(/[,;]+/) || []).map((t) => t.trim()).filter(Boolean);
+    let options = [];
+    const answer = pick('answer');
+    if (type === 'short') {
+      options = [];
+    } else {
+      options = (pick('options')?.toString().split(/\s*\|\s*|\s*,\s*/g) || [])
+        .map((t) => ({ text: t.trim() }))
+        .filter((o) => o.text);
+      if (answer != null && answer !== '') {
+        const aStr = answer.toString();
+        const parts = aStr.split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
+        if (parts.every((s) => /^\d+$/.test(s))) {
+          const idxs = parts.map((s) => parseInt(s, 10));
+          options = options.map((o, i) => ({ ...o, isCorrect: idxs.includes(i) }));
+        } else {
+          const texts = parts.map((s) => s.toLowerCase());
+          options = options.map((o) => ({ ...o, isCorrect: texts.includes(o.text.toLowerCase()) }));
+        }
+      } else if (options.length > 0) {
+        options[0].isCorrect = true;
+      }
+    }
+    docs.push({ text, type, options, subject, topic, tags, createdBy: req.user.id });
+  }
+  if (!docs.length) return res.status(400).json({ message: 'No valid rows found' });
+  const inserted = await Question.insertMany(docs);
+  res.json({ uploaded: inserted.length });
 });
 
 // List / filter

@@ -61,6 +61,8 @@ router.post('/:attemptId/force-submit', auth, requireRole('admin', 'instructor')
   const questions = await Question.find({ _id: { $in: attempt.questions } });
   const { score, details, hasSubjective } = gradeAttempt({ exam, questions, answers: attempt.answers || [] });
 
+  const correctness = new Map(details.map((d) => [String(d.questionId), d.correct]));
+  attempt.answers = (attempt.answers || []).map((a) => ({ ...a, isCorrect: correctness.get(String(a.question)) ?? null }));
   attempt.score = score;
   attempt.status = hasSubjective ? 'submitted' : 'graded';
   await attempt.save();

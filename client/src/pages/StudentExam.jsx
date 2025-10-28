@@ -38,8 +38,29 @@ export default function StudentExam() {
         api('/monitor/log', { method: 'POST', body: { examId: id, attemptId: attemptIdRef.current, type: 'tab_switch' } }).catch(() => {});
       }
     };
+    const onCopy = (e) => {
+      e.preventDefault();
+      api('/monitor/log', { method: 'POST', body: { examId: id, attemptId: attemptIdRef.current, type: 'copy' } }).catch(() => {});
+    };
+    const onPaste = (e) => {
+      e.preventDefault();
+      api('/monitor/log', { method: 'POST', body: { examId: id, attemptId: attemptIdRef.current, type: 'paste' } }).catch(() => {});
+    };
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v')) {
+        e.preventDefault();
+      }
+    };
     document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
+    document.addEventListener('copy', onCopy);
+    document.addEventListener('paste', onPaste);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      document.removeEventListener('copy', onCopy);
+      document.removeEventListener('paste', onPaste);
+      document.removeEventListener('keydown', onKey);
+    };
   }, [id]);
 
   const toggleOption = (qi, oi) => {
@@ -70,7 +91,7 @@ export default function StudentExam() {
   const mm = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   return (
-    <main style={{ padding: 24 }}>
+    <main style={{ padding: 24 }} onCopy={(e) => e.preventDefault()} onPaste={(e) => e.preventDefault()}>
       <h2>Exam</h2>
       <div>Time left: {timeLeft != null ? mm(timeLeft) : '...'} <button onClick={save}>Save</button> <button onClick={submit}>Submit</button></div>
       {questions.map((q, qi) => (
