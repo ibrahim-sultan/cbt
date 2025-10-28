@@ -13,6 +13,7 @@ import AdminMonitoring from './pages/admin/AdminMonitoring.jsx';
 import AdminResults from './pages/admin/AdminResults.jsx';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements.jsx';
 import AdminGrade from './pages/admin/AdminGrade.jsx';
+import AdminGroups from './pages/admin/AdminGroups.jsx';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="results" element={<AdminResults />} />
           <Route path="announcements" element={<AdminAnnouncements />} />
           <Route path="grade" element={<AdminGrade />} />
+          <Route path="groups" element={<AdminGroups />} />
         </Route>
       </Routes>
     </BrowserRouter>

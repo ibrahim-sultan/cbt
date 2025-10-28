@@ -11,6 +11,7 @@ export default function AdminLayout() {
         <Link to="/admin/results">Results</Link>
         <Link to="/admin/announcements">Announcements</Link>
         <Link to="/admin/grade">Grade</Link>
+        <Link to="/admin/groups">Groups</Link>
       </nav>
       <Outlet />
     </main>

@@ -3,6 +3,7 @@ import { auth, requireRole } from '../middleware/auth.js';
 import Exam from '../models/Exam.js';
 import Attempt from '../models/Attempt.js';
 import Question from '../models/Question.js';
+import User from '../models/User.js';
 import { sample } from '../utils/random.js';
 import { gradeAttempt } from '../utils/grading.js';
 import mongoose from 'mongoose';
@@ -25,11 +26,18 @@ router.get('/', auth, requireRole('admin', 'instructor'), async (req, res) => {
   res.json(exams);
 });
 
-// Student: my exams (basic placeholder)
+// Student: assigned exams (time-window + group intersection)
 router.get('/assigned', auth, async (req, res) => {
   const now = new Date();
-  const exams = await Exam.find({ startAt: { $lte: now }, endAt: { $gte: now } });
-  res.json(exams);
+  const me = await User.findById(req.user.id);
+  const myGroups = new Set(me?.groups || []);
+  const exams = await Exam.find({ startAt: { $lte: now }, endAt: { $gte: now } }).sort({ startAt: 1 });
+  const filtered = exams.filter((ex) => {
+    const gids = ex.groupIds || [];
+    if (gids.length === 0) return true; // open to all
+    return gids.some((g) => myGroups.has(g));
+  });
+  res.json(filtered);
 });
 
 // Admin get exam by id
