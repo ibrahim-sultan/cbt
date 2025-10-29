@@ -12,6 +12,7 @@ import announcementRoutes from './routes/announcements.js';
 import groupRoutes from './routes/groups.js';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -35,9 +36,18 @@ const PORT = process.env.PORT || 4000;
 
 // Serve client build only when CLIENT_DIST_DIR is provided (e.g., on Render)
 if (process.env.CLIENT_DIST_DIR) {
-  const clientDist = path.resolve(process.cwd(), process.env.CLIENT_DIST_DIR);
-  app.use(express.static(clientDist));
-  app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  const candidates = [
+    process.env.CLIENT_DIST_DIR,
+    path.resolve(process.cwd(), process.env.CLIENT_DIST_DIR),
+    path.resolve(process.cwd(), '..', process.env.CLIENT_DIST_DIR),
+    path.resolve(process.cwd(), '../../', process.env.CLIENT_DIST_DIR)
+  ];
+  const clientDist = candidates.find((p) => fs.existsSync(p));
+  console.log('Static client directory resolved to:', clientDist || '(not found)');
+  if (clientDist) {
+    app.use(express.static(clientDist));
+    app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  }
 }
 
 if (process.env.NODE_ENV !== 'test') {

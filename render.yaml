@@ -14,7 +14,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_DIST_DIR
-        value: client/dist
+        value: ../client/dist
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
