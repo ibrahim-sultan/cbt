@@ -4,17 +4,16 @@ services:
     env: node
     plan: free
     buildCommand: |
-      npm --prefix server ci
-      npm --prefix client install
-      npm --prefix client run build
-    startCommand: npm --prefix server run start
+      npm install
+      npm run build
+    startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
       - key: CLIENT_DIST_DIR
-        value: ../client/dist
+        value: client/dist
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET

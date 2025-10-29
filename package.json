@@ -1,28 +1,15 @@
 {
-  "name": "cbt",
+  "name": "cbt-fullstack",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.1.0",
-  "description": "CBT web application",
-  "author": "",
-  "workspaces": [
-    "client",
-    "server"
-  ],
   "scripts": {
-    "install:all": "npm --prefix client install && npm --prefix server install",
-    "dev:client": "npm --prefix client run dev",
-    "dev:server": "npm --prefix server run dev",
-    "dev": "concurrently --kill-others -n client,server -c green,blue \"npm:dev:client\" \"npm:dev:server\"",
-    "build:client": "npm --prefix client run build",
-    "build": "npm run build:client",
-    "start": "npm --prefix server run start",
+    "install": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
     "lint": "npm --prefix client run lint && npm --prefix server run lint",
-    "test": "npm --prefix client run test && npm --prefix server run test",
-    "test:client": "npm --prefix client run test",
-    "test:server": "npm --prefix server run test"
+    "test": "npm --prefix client run test && npm --prefix server run test"
   },
-  "devDependencies": {
-    "concurrently": "^9.0.1",
-    "cross-env": "^7.0.3"
+  "engines": {
+    "node": ">=18.x"
   }
 }
