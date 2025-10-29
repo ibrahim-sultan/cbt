@@ -34,15 +34,26 @@ app.use('/api/groups', groupRoutes);
 
 const PORT = process.env.PORT || 4000;
 
-// Serve client build only when CLIENT_DIST_DIR is provided (e.g., on Render)
-if (process.env.CLIENT_DIST_DIR) {
-  const candidates = [
-    process.env.CLIENT_DIST_DIR,
-    path.resolve(process.cwd(), process.env.CLIENT_DIST_DIR),
-    path.resolve(process.cwd(), '..', process.env.CLIENT_DIST_DIR),
-    path.resolve(process.cwd(), '../../', process.env.CLIENT_DIST_DIR)
-  ];
-  const clientDist = candidates.find((p) => fs.existsSync(p));
+// Serve client build for SPA in production/runtime if we can find it
+{
+  const candidates = [];
+  if (process.env.CLIENT_DIST_DIR) {
+    candidates.push(
+      process.env.CLIENT_DIST_DIR,
+      path.resolve(process.cwd(), process.env.CLIENT_DIST_DIR),
+      path.resolve(process.cwd(), '..', process.env.CLIENT_DIST_DIR),
+      path.resolve(process.cwd(), '../../', process.env.CLIENT_DIST_DIR)
+    );
+  }
+  // Common fallbacks for monorepos (root -> client/dist, server -> ../client/dist)
+  candidates.push(
+    path.resolve(process.cwd(), 'client/dist'),
+    path.resolve(process.cwd(), '../client/dist'),
+    path.resolve(process.cwd(), '../../client/dist')
+  );
+  const clientDist = candidates.find((p) => {
+    try { return fs.existsSync(path.join(p, 'index.html')); } catch { return false; }
+  });
   console.log('Static client directory resolved to:', clientDist || '(not found)');
   if (clientDist) {
     app.use(express.static(clientDist));
