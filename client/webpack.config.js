@@ -1,5 +1,6 @@
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import webpack from 'webpack';
 
 export default {
   entry: './src/index.jsx',
@@ -23,6 +24,9 @@ export default {
     proxy: { '/api': 'http://localhost:4000' }
   },
   plugins: [
-    new HtmlWebpackPlugin({ template: 'public/index.html' })
+    new HtmlWebpackPlugin({ template: 'public/index.html' }),
+    new webpack.DefinePlugin({
+      'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || '')
+    })
   ]
 };
