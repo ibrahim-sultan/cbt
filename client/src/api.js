@@ -15,6 +15,7 @@ export async function api(path, { method = 'GET', body, token } = {}) {
   let res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
+    credentials: 'include',
     body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 401) {
@@ -24,6 +25,7 @@ export async function api(path, { method = 'GET', body, token } = {}) {
       res = await fetch(`${API_BASE}${path}`, {
         method,
         headers,
+        credentials: 'include',
         body: body ? JSON.stringify(body) : undefined,
       });
     }

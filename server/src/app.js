@@ -15,7 +15,17 @@ import groupRoutes from './routes/groups.js';
 
 const app = express();
 app.use(helmet());
-app.use(cors({ origin: '*', credentials: true }));
+
+// Strict CORS for credentialed requests (needed for refresh cookie)
+const allowed = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+app.use(cors({
+  origin: allowed.length ? allowed : true,
+  credentials: true
+}));
+
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 app.use(cookieParser());

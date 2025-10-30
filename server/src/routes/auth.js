@@ -43,7 +43,8 @@ router.post('/login', async (req, res) => {
     await RefreshToken.create({ user: user._id, token: rt, expiresAt });
 
     const secure = process.env.NODE_ENV === 'production';
-    res.cookie('rt', rt, { httpOnly: true, sameSite: 'lax', secure, expires: expiresAt, path: '/' });
+    const sameSite = secure ? 'none' : 'lax';
+    res.cookie('rt', rt, { httpOnly: true, sameSite, secure, expires: expiresAt, path: '/' });
 
     return res.json({ token: access, user: { id: user.id, role: user.role, name: user.name, email: user.email } });
   } catch (e) {
