@@ -16,13 +16,20 @@ import groupRoutes from './routes/groups.js';
 const app = express();
 app.use(helmet());
 
-// Strict CORS for credentialed requests (needed for refresh cookie)
-const allowed = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || '')
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
+// CORS: allow Netlify app and local dev
+const allowedOrigins = [
+  'https://cbtapplication.netlify.app',
+  'http://localhost:3000'
+];
 app.use(cors({
-  origin: allowed.length ? allowed : true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 
