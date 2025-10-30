@@ -24,6 +24,22 @@ router.post('/register-admin', async (req, res) => {
   }
 });
 
+// TEMP: register student for seeding
+router.post('/register-student', async (req, res) => {
+  try {
+    const { email, password, name, groups = [] } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'email and password required' });
+    let user = await User.findOne({ email });
+    if (user) return res.status(409).json({ message: 'User exists' });
+    user = new User({ email, name, role: 'student', groups });
+    await user.setPassword(password);
+    await user.save();
+    return res.status(201).json({ id: user.id, email: user.email });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password, examId } = req.body;
