@@ -1,4 +1,4 @@
-const API_BASE = process.env.API_BASE_URL || '/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || '/api';
 
 async function refreshToken() {
   const res = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST', credentials: 'include' });

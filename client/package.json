@@ -4,17 +4,16 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "webpack serve --mode development --open --hot",
-    "build": "webpack --mode production",
-    "lint": "eslint \"src/**/*.{js,jsx}\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:one": "jest -t"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "react-scripts": "^5.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
@@ -37,7 +36,11 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "transform": {"^.+\\.(js|jsx)$": "babel-jest"},
-    "moduleNameMapper": {"\\.(css)$": "identity-obj-proxy"}
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    },
+    "moduleNameMapper": {
+      "\\.(css)$": "identity-obj-proxy"
+    }
   }
 }
